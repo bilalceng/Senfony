@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Senfony</string>
+    <string name="search_hint">Enter podcast search</string>
+    <string name="search" />
+    <string name="subscribe">Subscribe</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="ok_button">OK</string>
+</resources>
