@@ -16,6 +16,7 @@ import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Url
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -40,6 +41,7 @@ class RssFeedService private constructor(){
         val retrofit = Retrofit.Builder()
             .baseUrl("${xmlFileUrl.split("?")[0]}/")
             .build()
+
 
         service = retrofit.create(FeedService::class.java)
         try {
@@ -115,7 +117,7 @@ class RssFeedService private constructor(){
                     "description" -> rssFeedResponse.description = node.textContent
                     "itunes:summary" -> rssFeedResponse.summary = node.textContent
                     "item" -> rssFeedResponse.episodes?.add(RssFeedResponse.EpisodeResponse())
-                    "pubDate" -> rssFeedResponse.lastUpdated = DateUtil.xmlDateToNormalDate(node.textContent)
+                    "pubDate" -> rssFeedResponse.lastUpdated = Date(node.textContent)
 
                 }
             }

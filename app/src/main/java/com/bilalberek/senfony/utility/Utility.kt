@@ -13,7 +13,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.safety.Whitelist
 class Utility {
     companion object{
-        const val  BASE_URL ="https://itunes.apple.com"
+        const val  BASE_URL ="https://itunes.apple.com/"
     }
 }
 
@@ -42,13 +42,13 @@ object DateUtil{
         return outputFormat.format(date)
     }
 
-    fun xmlDateToNormalDate(dateString: String?): Date {
+  /*  fun xmlDateToNormalDate(dateString: String?): Date {
         val date = dateString ?: return Date()
         val inFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z",
         Locale.getDefault())
 
         return inFormat.parse(date) ?: Date()
-    }
+    }*/
 
     fun dateToShortDate(date: Date): String{
         val outputFormat = DateFormat.getDateInstance(

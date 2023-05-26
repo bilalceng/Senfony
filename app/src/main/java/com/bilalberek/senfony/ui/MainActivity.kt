@@ -28,7 +28,7 @@ import com.bilalberek.senfony.viewModel.SearchViewModel
 import kotlinx.coroutines.*
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmentListener {
     private val podcastViewModel by viewModels<PodcastViewModel>()
     private lateinit var searchItem : MenuItem
     private val searchViewModel by viewModels<SearchViewModel>()
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         setupToolbar()
         setupViewModels()
         updateControls()
+        setUpPodcastListView()
         handleIntent(intent)
         showDetails()
         addBackStackListener()
@@ -57,10 +58,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupViewModels() {
-        val service = ItunesService.instance
-        val service2 = RssFeedService.instance
-        searchViewModel.iTunesRepo = ItunesRepo(service)
-        podcastViewModel.podcastRepo = PodcastRepo(RssFeedService.instance)
+        searchViewModel.iTunesRepo = ItunesRepo(ItunesService.instance)
+        podcastViewModel.podcastRepo = PodcastRepo(RssFeedService.instance,podcastViewModel.podcastDao)
     }
 
     private fun updateControls() {
@@ -234,5 +233,33 @@ class MainActivity : AppCompatActivity() {
                 searchItem.isVisible = true
             }
         }
+    }
+
+    override fun onSubscribe(){
+        podcastViewModel.saveActivePodcast()
+        supportFragmentManager.popBackStack()
+    }
+    override fun onUnSubscribe(){
+        Log.d("bilal","onUnsubscribe")
+        podcastViewModel.deleteActivePodcast()
+        supportFragmentManager.popBackStack()
+    }
+
+
+    private fun showSubscribedPodcasts(){
+        val podcasts = podcastViewModel.getPodcasts()?.value
+        if (podcasts != null){
+            binding.toolbar.title = getString(R.string.subscribed_podcasts)
+            podcastListAdapter.differ.submitList(podcasts)
+        }
+
+    }
+
+    private fun setUpPodcastListView(){
+        podcastViewModel.getPodcasts()?.observe(this,{
+            if (it != null){
+                showSubscribedPodcasts()
+            }
+        })
     }
 }

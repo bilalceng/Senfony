@@ -1,9 +1,6 @@
 package com.bilalberek.senfony.model
 
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.Index
-import androidx.room.PrimaryKey
+import androidx.room.*
 import java.util.Date
 
 
@@ -21,7 +18,7 @@ import java.util.Date
 data class Episode(
     @PrimaryKey
     var guid : String = "",
-    val podcastId: Long? = null,
+    var podcastId: Long? = null,
     var title: String = "",
     var description:String = "",
     var mediaUrl: String = "",
@@ -39,5 +36,6 @@ data class Podcast(
     var feedDesc: String = "",
     var imageUrl: String = "",
     var lastUpdated: Date = Date(),
+    @Ignore
     var episodes: List<Episode> = listOf()
 )
