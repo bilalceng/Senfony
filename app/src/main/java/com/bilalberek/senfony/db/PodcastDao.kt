@@ -25,7 +25,7 @@ interface PodcastDao {
     suspend fun insertEpisode(episode: Episode): Long
 
     @Query("SELECT * FROM Podcast WHERE feedUrl = :url ")
-    fun loadPodcast(url: String) : Podcast?
+    suspend fun loadPodcast(url: String) : Podcast?
 
     @Delete
     fun deletePodcast(podcast: Podcast)

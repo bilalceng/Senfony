@@ -29,7 +29,11 @@ sealed class Resource<T>(
 
 object DateUtil{
 
-    fun complexDateToNormalDate(complexDate: String): String{
+    fun complexDateToNormalDate(complexDate: String?): String{
+
+        if(complexDate == null){
+            return "-"
+        }
 
         val normalFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
         Locale.getDefault())

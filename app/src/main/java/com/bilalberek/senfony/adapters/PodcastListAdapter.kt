@@ -11,6 +11,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bilalberek.senfony.databinding.SearchItemBinding
 import com.bilalberek.senfony.viewModel.SearchViewModel
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestOptions
 
 class PodcastListAdapter(
     private val parentActivity:Activity
@@ -25,6 +28,12 @@ class PodcastListAdapter(
         val lastUpdatedTextView: TextView = binding.podcastLastUpdatedTextView
         val podcastImageView: ImageView = binding.podcastImage
 
+    }
+
+    var onToolClickListener: ((SearchViewModel.PodcastSummaryViewData) -> Unit)? = null
+
+    fun setOnItemClickListener(listener: (SearchViewModel.PodcastSummaryViewData) -> Unit){
+        onToolClickListener = listener
     }
 
     private val differCallback = object :
@@ -66,16 +75,13 @@ class PodcastListAdapter(
 
         Glide.with(parentActivity)
             .load(searchView.imageUrl)
+            .centerCrop()
+            .circleCrop()  // You can use circleCrop to display the image as a circular image
+            .apply(RequestOptions.bitmapTransform(RoundedCorners(16)))
+            .transition(DrawableTransitionOptions.withCrossFade())
             .into(holder.podcastImageView)
     }
-
-
-
-    var onToolClickListener: ((SearchViewModel.PodcastSummaryViewData) -> Unit)? = null
-
-    fun setOnItemClickListener(listener: (SearchViewModel.PodcastSummaryViewData) -> Unit){
-        onToolClickListener = listener
-    }
+    
     override fun getItemCount(): Int {
        return differ.currentList.size
     }

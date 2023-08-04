@@ -29,8 +29,7 @@ class SearchViewModel(application: Application) :
 
     private fun itunesPodcastToPodcastSummaryView(
         itunesPodcast: PodcastResponse.ItunesPodcast
-    ):
-            PodcastSummaryViewData {
+    ): PodcastSummaryViewData {
         return PodcastSummaryViewData(
             itunesPodcast.collectionCensoredName,
            DateUtil.complexDateToNormalDate(itunesPodcast.releaseDate ?: "-"),

@@ -29,7 +29,7 @@ import kotlinx.coroutines.*
 import java.io.IOException
 
 class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmentListener {
-    private val podcastViewModel by viewModels<PodcastViewModel>()
+     val podcastViewModel by viewModels<PodcastViewModel>()
     private lateinit var searchItem : MenuItem
     private val searchViewModel by viewModels<SearchViewModel>()
     private lateinit var podcastListAdapter: PodcastListAdapter
@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
         setupViewModels()
         updateControls()
         setUpPodcastListView()
+        Log.i("yarak","${intent.action}")
+        intent.putExtra(SearchManager.QUERY,"fenerbahce")
         handleIntent(intent)
         showDetails()
         addBackStackListener()
@@ -123,7 +125,7 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
         super.onNewIntent(intent)
         Log.i("yarak", "Results = ${intent?.action}")
         setIntent(intent)
-        handleIntent(intent!!)
+        handleIntent(intent?:Intent())
     }
 
 

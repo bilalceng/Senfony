@@ -12,6 +12,11 @@ import com.bilalberek.senfony.utility.DateUtil.dateToShortDate
 import kotlinx.coroutines.launch
 import java.util.Date
 
+public inline fun <T, R> T.letMe(
+    block: (T) -> R
+): R{
+        return block(this)
+}
 class PodcastViewModel(application: Application): AndroidViewModel(application) {
 
     var livePodcastSummaryViewData:LiveData<List<SearchViewModel.PodcastSummaryViewData>>?  = null
@@ -77,21 +82,23 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
         )
     }
 
+
+
     suspend fun getPodcast(podcastSummaryViewData: SearchViewModel.PodcastSummaryViewData){
 
-        podcastSummaryViewData.feedUrl?.let { url ->
+         podcastSummaryViewData.feedUrl?.let { url ->
             viewModelScope.launch {
                 podcastRepo?.getPodcast(url)?.let {
                     it.feedTitle = podcastSummaryViewData.name ?: ""
                     it.imageUrl = podcastSummaryViewData.imageUrl ?: ""
-                    _podcastLiveData.value = podcastTOPodcastView(it)
+                    _podcastLiveData.postValue(podcastTOPodcastView(it))
                     activePodcast = it
                 } ?: run {
-                    _podcastLiveData.value = null
+                    _podcastLiveData.postValue(null)
                 }
             }
         } ?: run {
-            _podcastLiveData.value = null
+            this._podcastLiveData.value = null
         }
 
     }
@@ -119,5 +126,24 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
             podcastRepo?.delete(podcast)
         }
 
+    }
+}
+
+data class Person(val name: String, val age: Int)
+fun main(){
+    var a = 12
+    var b = 10
+
+     repeat(10){ index ->
+         println(index)
+        a += 3
+    }
+    println(a)
+
+    val person = Person("Alice", 30)
+
+    var bilal = with(person) {
+        println("Name: $name")
+        println("Age: $age")
     }
 }

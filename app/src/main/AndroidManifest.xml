@@ -24,6 +24,7 @@
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.SEARCH"/>
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.DIAL" />
             </intent-filter>
 
             <meta-data

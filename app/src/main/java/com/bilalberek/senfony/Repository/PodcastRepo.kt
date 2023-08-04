@@ -26,6 +26,7 @@ class PodcastRepo (private var feedService: RssFeedService,
              podcastLocal = podcastDao.loadPodcast(feedUrl)
          }
 
+
          if (podcastLocal != null) {
              Log.d("yarrrak", "burdayım")
              podcastLocal?.id?.let {
