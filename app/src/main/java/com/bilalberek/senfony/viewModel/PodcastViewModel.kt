@@ -2,6 +2,7 @@ package com.bilalberek.senfony.viewModel
 
 import android.app.Application
 import android.text.format.DateUtils
+import android.widget.Toast
 import androidx.lifecycle.*
 import com.bilalberek.senfony.Repository.PodcastRepo
 import com.bilalberek.senfony.db.PodPlayDatabase
@@ -12,11 +13,7 @@ import com.bilalberek.senfony.utility.DateUtil.dateToShortDate
 import kotlinx.coroutines.launch
 import java.util.Date
 
-public inline fun <T, R> T.letMe(
-    block: (T) -> R
-): R{
-        return block(this)
-}
+
 class PodcastViewModel(application: Application): AndroidViewModel(application) {
 
     var livePodcastSummaryViewData:LiveData<List<SearchViewModel.PodcastSummaryViewData>>?  = null
@@ -84,7 +81,7 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
 
 
 
-    suspend fun getPodcast(podcastSummaryViewData: SearchViewModel.PodcastSummaryViewData){
+     fun getPodcast(podcastSummaryViewData: SearchViewModel.PodcastSummaryViewData){
 
          podcastSummaryViewData.feedUrl?.let { url ->
             viewModelScope.launch {
@@ -98,7 +95,7 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
                 }
             }
         } ?: run {
-            this._podcastLiveData.value = null
+            _podcastLiveData.value = null
         }
 
     }
@@ -127,23 +124,18 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
         }
 
     }
-}
 
-data class Person(val name: String, val age: Int)
-fun main(){
-    var a = 12
-    var b = 10
+    suspend fun setActivePodcast(feedUrl: String):
+            SearchViewModel.PodcastSummaryViewData?{
+        val repo =  podcastRepo ?: return null
+        val podcast = repo.getPodcast(feedUrl) ?: return null
+        _podcastLiveData.value = podcastTOPodcastView(podcast)
+        activePodcast = podcast
 
-     repeat(10){ index ->
-         println(index)
-        a += 3
-    }
-    println(a)
-
-    val person = Person("Alice", 30)
-
-    var bilal = with(person) {
-        println("Name: $name")
-        println("Age: $age")
+        return podcastToSummaryView(podcast)
     }
 }
+
+
+
+

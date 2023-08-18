@@ -30,7 +30,7 @@ data class Episode(
 @Entity()
 data class Podcast(
     @PrimaryKey(autoGenerate = true)
-    var id: Int? = null,
+    var id: Long? = null,
     var feedUrl: String = "",
     var feedTitle: String = "",
     var feedDesc: String = "",

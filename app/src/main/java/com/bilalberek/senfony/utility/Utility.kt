@@ -13,7 +13,7 @@ import org.jsoup.nodes.Document
 import org.jsoup.safety.Whitelist
 class Utility {
     companion object{
-        const val  BASE_URL ="https://itunes.apple.com/"
+        const val  BASE_URL ="https://itunes.apple.com"
     }
 }
 

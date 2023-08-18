@@ -71,7 +71,6 @@ class PodcastDetailsFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
 
         inflater.inflate(R.menu.menu_details, menu)
-
     }
 
 
@@ -90,6 +89,11 @@ class PodcastDetailsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        updateControls()
+    }
+
+    fun updateControls(){
         podcastViewModel.podcastLiveData.observe(viewLifecycleOwner
         ) { viewData ->
             if (viewData != null) {
@@ -118,7 +122,6 @@ class PodcastDetailsFragment : Fragment() {
             }
 
         }
-
 
     }
 

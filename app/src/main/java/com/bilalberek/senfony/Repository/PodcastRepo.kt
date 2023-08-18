@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import com.bilalberek.senfony.db.PodcastDao
 import com.bilalberek.senfony.model.Episode
 import com.bilalberek.senfony.model.Podcast
+import com.bilalberek.senfony.service.FeedService
 import com.bilalberek.senfony.service.RssFeedResponse
 import com.bilalberek.senfony.service.RssFeedService
 import com.bilalberek.senfony.utility.DateUtil
@@ -16,35 +17,31 @@ import java.util.*
 
 
 class PodcastRepo (private var feedService: RssFeedService,
-                    private var podcastDao: PodcastDao
+                     var podcastDao: PodcastDao
 ){
+suspend fun getPodcast(feedUrl : String): Podcast?{
 
-    var podcastLocal: Podcast? = null
-     suspend fun getPodcast(feedUrl : String): Podcast?{
+        val podcastLocal = podcastDao.loadPodcast(feedUrl)
+        if (podcastLocal != null) {
+            podcastLocal.id?.let {
+                podcastLocal.episodes = podcastDao.loadEpisodes(it)
+                return podcastLocal
+            }
+        }
 
-         GlobalScope.launch {
-             podcastLocal = podcastDao.loadPodcast(feedUrl)
-         }
+             var podcast: Podcast? = null
+             val feedResponse = feedService.getFeed(feedUrl)
+             if (feedResponse != null) {
+                 podcast = rssResponseToPodcast(feedUrl, "", feedResponse)
 
-
-         if (podcastLocal != null) {
-             Log.d("yarrrak", "burdayım")
-             podcastLocal?.id?.let {
-                 podcastLocal?.episodes = podcastDao.loadEpisodes(it.toLong())
-                 return  podcastLocal
              }
+             return podcast
 
          }
 
 
-         var podcast: Podcast? = null
-         val feedResponse = feedService.getFeed(feedUrl)
-         if (feedResponse != null) {
-             podcast = rssResponseToPodcast(feedUrl, "", feedResponse)
 
-         }
-     return podcast
-    }
+
 
     private fun rssItemsToEpisodes(episodeResponses: List<RssFeedResponse.EpisodeResponse>): List<Episode>{
             return episodeResponses.map{
@@ -95,4 +92,57 @@ class PodcastRepo (private var feedService: RssFeedService,
             podcastDao.deletePodcast(podcast)
         }
     }
-}
+
+
+    private suspend fun  getNewEpisodes(localPodcast: Podcast): List<Episode>{
+        val response = feedService.getFeed(localPodcast.feedUrl)
+        if(response != null){
+            val remotePodcast = rssResponseToPodcast(localPodcast.feedUrl,
+            localPodcast.imageUrl,
+            response)
+
+            remotePodcast?.let {
+                val localEpisodes = podcastDao.loadEpisodes(localPodcast.id!!)
+                return remotePodcast.episodes.filter { episode ->
+                    localEpisodes.find { episode.guid == it.guid } == null
+                }
+
+                }
+            }
+        return listOf()
+        }
+
+
+    private fun saveNewEpisodes(podcastId: Long, episodes: List<Episode> ){
+
+        GlobalScope.launch {
+            for( episode in episodes){
+                episode.podcastId = podcastId
+                podcastDao.insertEpisode(episode)
+            }
+        }
+    }
+
+    suspend fun updatePodcastEpisodes(): MutableList<PodcastUpdateInfo>{
+        val updatedPodcast = mutableListOf<PodcastUpdateInfo>()
+        val podcasts = podcastDao.loadSubscribedPodcastList()
+
+        for (podcast in podcasts){
+            val newEpisodes = getNewEpisodes(podcast)
+            if (newEpisodes.isNotEmpty()){
+                podcast.id?.let {
+                    saveNewEpisodes(it, newEpisodes)
+                    updatedPodcast.add(PodcastUpdateInfo(podcast.feedUrl,podcast.feedTitle,
+                        newEpisodes.count()))
+                }
+            }
+        }
+        return updatedPodcast
+    }
+
+    inner class PodcastUpdateInfo(
+        val feedUrl: String,
+        val name: String,
+        val newCount: Int
+    )
+    }

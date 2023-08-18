@@ -29,9 +29,9 @@ class RssFeedService private constructor(){
         interceptor.level = HttpLoggingInterceptor.Level.BODY
 
         val client = OkHttpClient().newBuilder()
-            .connectTimeout(10,TimeUnit.SECONDS)
-            .writeTimeout(10,TimeUnit.SECONDS)
-            .readTimeout(10,TimeUnit.SECONDS)
+            .connectTimeout(30,TimeUnit.SECONDS)
+            .writeTimeout(30,TimeUnit.SECONDS)
+            .readTimeout(30,TimeUnit.SECONDS)
 
         if(BuildConfig.DEBUG){
             client.addInterceptor(interceptor)
@@ -76,9 +76,10 @@ class RssFeedService private constructor(){
 
 
     private fun domToRssFeedResponse(node: Node, rssFeedResponse: RssFeedResponse){
+
         if(node.nodeType == Node.ELEMENT_NODE){
 
-            //Log.d("yarrak", node.nodeName)
+
             val nodeName = node.nodeName
             val parentName = node.parentNode.nodeName
 
@@ -109,7 +110,7 @@ class RssFeedService private constructor(){
                 }
             }
 
-            Log.d("yarrak", parentName)
+            //Log.d("yarrak", parentName)
             if (parentName == "channel"){
 
                 when(nodeName){

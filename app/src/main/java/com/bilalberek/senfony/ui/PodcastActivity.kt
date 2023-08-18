@@ -13,8 +13,11 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.constraintlayout.widget.ConstraintSet.Constraint
+import androidx.lifecycle.viewModelScope
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.work.*
 import com.bilalberek.senfony.R
 import com.bilalberek.senfony.Repository.ItunesRepo
 import com.bilalberek.senfony.Repository.PodcastRepo
@@ -25,10 +28,14 @@ import com.bilalberek.senfony.service.RssFeedService
 import com.bilalberek.senfony.ui.fragments.PodcastDetailsFragment
 import com.bilalberek.senfony.viewModel.PodcastViewModel
 import com.bilalberek.senfony.viewModel.SearchViewModel
+import com.bilalberek.senfony.worker.EpisodeUpdateWorker
 import kotlinx.coroutines.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmentListener {
+class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmentListener {
      val podcastViewModel by viewModels<PodcastViewModel>()
     private lateinit var searchItem : MenuItem
     private val searchViewModel by viewModels<SearchViewModel>()
@@ -45,12 +52,11 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
         setupViewModels()
         updateControls()
         setUpPodcastListView()
-        Log.i("yarak","${intent.action}")
-        intent.putExtra(SearchManager.QUERY,"fenerbahce")
         handleIntent(intent)
-        showDetails()
+        showDetails(podcast = null)
         addBackStackListener()
         createSubscription()
+        scheduleJobs()
 
     }
 
@@ -83,9 +89,10 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
 
     private fun performSearch(term: String) {
         showProgressBar()
-        GlobalScope.launch {
+
+       GlobalScope.async {
             try {
-                if (searchViewModel.isInternetAvailable(this@MainActivity)){
+                if (searchViewModel.isInternetAvailable(this@PodcastActivity)){
                     val results = searchViewModel.searchPodcasts(term)
                     withContext(Dispatchers.Main) {
                         hideProgressBar()
@@ -94,14 +101,14 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
                 }
 
                 }else{
-                    Toast.makeText(this@MainActivity,
+                    Toast.makeText(this@PodcastActivity,
                         "checkout internet connection please",
                         Toast.LENGTH_SHORT).show()
 
                 }
             }catch (t:Throwable){
                 when(t){
-                    is IOException ->    Toast.makeText(this@MainActivity,
+                    is IOException ->    Toast.makeText(this@PodcastActivity,
                         "checkout internet connection please",
                         Toast.LENGTH_SHORT).show()
                 }
@@ -115,8 +122,16 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
 
         if (Intent.ACTION_SEARCH == intent.action) {
             val query = intent.getStringExtra(SearchManager.QUERY) ?: return
-            Log.i("yarak", "Results = $query")
             performSearch(query)
+        }
+
+        val podcastFeedUrl =
+            intent.getStringExtra(EpisodeUpdateWorker.EXTRA_FEED_URL)
+        podcastFeedUrl?.let {
+            podcastViewModel.viewModelScope.launch {
+                val podcastSummaryViewData  = podcastViewModel.setActivePodcast(podcastFeedUrl)
+              showDetails(podcastSummaryViewData)
+            }
         }
     }
 
@@ -135,6 +150,18 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
         inflater.inflate(R.menu.search_menu, menu)
 
          searchItem = menu.findItem(R.id.search_item)
+
+        searchItem?.setOnActionExpandListener(object: MenuItem.OnActionExpandListener {
+        override fun onMenuItemActionCollapse(item: android.view.MenuItem): Boolean{
+            showSubscribedPodcasts()
+            return true
+            }
+
+            override fun onMenuItemActionExpand(item: android.view.MenuItem): Boolean{
+                return true
+            }
+        })
+
 
         val searchView = searchItem.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE)
@@ -163,6 +190,7 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
 
 
     companion object{
+        private const val TAG_EPİSODE_UPDATE_JOB = "com.bilalberek.senfony.ui"
         private const val TAG_DETAILS_FRAGMENT = "DetailsFragment"
     }
 
@@ -204,14 +232,25 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
 
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun showDetails(){
+    private fun showDetails(podcast: SearchViewModel.PodcastSummaryViewData?){
 
-        podcastListAdapter.setOnItemClickListener { podcastSummaryViewData ->
-            val feedUrl = podcastSummaryViewData.feedUrl ?: return@setOnItemClickListener
+        if (podcast != null){
             showProgressBar()
             GlobalScope.launch {
-                podcastViewModel.getPodcast(podcastSummaryViewData)
+                podcastViewModel.getPodcast(podcast)
             }
+        }
+
+
+        podcastListAdapter.setOnItemClickListener { podcastSummaryViewData ->
+            podcastSummaryViewData?.let{
+                val feedUrl = podcastSummaryViewData.feedUrl ?: return@setOnItemClickListener
+                showProgressBar()
+                GlobalScope.launch {
+                    podcastViewModel.getPodcast(podcastSummaryViewData)
+                }
+            } ?: showError("podcastSummaryViewData is null")
+
 
 
         }
@@ -264,4 +303,20 @@ class MainActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmen
             }
         })
     }
+
+    private fun scheduleJobs(){
+        val constraints = Constraints.Builder().apply {
+            setRequiredNetworkType(NetworkType.CONNECTED)
+            setRequiresCharging(true)
+        }.build()
+
+        val request = PeriodicWorkRequestBuilder<EpisodeUpdateWorker>(
+            15,TimeUnit.MINUTES)
+            .setConstraints(constraints)
+            .build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(TAG_EPİSODE_UPDATE_JOB,
+        ExistingPeriodicWorkPolicy.REPLACE,request)
+    }
+
+
 }

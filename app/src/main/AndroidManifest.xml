@@ -18,7 +18,7 @@
         <activity
             android:theme="@style/Theme.Senfony.NoActionBar"
             android:launchMode="singleTop"
-            android:name=".ui.MainActivity"
+            android:name=".ui.PodcastActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

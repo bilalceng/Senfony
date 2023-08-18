@@ -27,6 +27,9 @@ interface PodcastDao {
     @Query("SELECT * FROM Podcast WHERE feedUrl = :url ")
     suspend fun loadPodcast(url: String) : Podcast?
 
+    @Query("SELECT * FROM Podcast ORDER BY feedTitle")
+    fun loadSubscribedPodcastList(): List<Podcast>
+
     @Delete
     fun deletePodcast(podcast: Podcast)
 

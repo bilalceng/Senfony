@@ -7,12 +7,14 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Build.VERSION.SDK
 import android.os.Build.VERSION.SDK_INT
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import com.bilalberek.senfony.Repository.ItunesRepo
 import com.bilalberek.senfony.model.PodcastResponse
 import com.bilalberek.senfony.utility.DateUtil
 import java.io.IOException
+import java.net.UnknownHostException
 
 class SearchViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -40,11 +42,20 @@ class SearchViewModel(application: Application) :
 
     suspend fun searchPodcasts(term: String):
             List<PodcastSummaryViewData> {
+        Log.d("yarak" ,"  termn3 :${term}")
 
         try {
+            Log.d("yarak" ,"  termn4 :${term}")
 
-            if(isInternetAvailable(getApplication())){
+            try {
                 val results = iTunesRepo?.searchByTerm(term)
+            }catch (e: UnknownHostException){
+                Toast.makeText(getApplication(), "" +
+                        "http error occured", Toast.LENGTH_SHORT).show()
+            }
+
+                val results = iTunesRepo?.searchByTerm(term)
+            Log.d("yarak" ,"meraba")
 
                 if (results != null && results.isSuccessful) {
 
@@ -61,20 +72,16 @@ class SearchViewModel(application: Application) :
 
                 }
 
-            }else{
-                Toast.makeText(getApplication(),
+
+
+        }catch (e:Exception){
+
+                 Toast.makeText(getApplication(),
                     "checkout internet connection please",
                     Toast.LENGTH_SHORT).show()
             }
 
-        }catch (t:Throwable){
-            when(t){
-                is IOException ->   Toast.makeText(getApplication(),
-                    "checkout internet connection please",
-                    Toast.LENGTH_SHORT).show()
-            }
 
-        }
         return emptyList()
     }
 
