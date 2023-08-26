@@ -66,7 +66,7 @@ class EpisodeUpdateWorker(context: Context, params: WorkerParameters):CoroutineW
         val notification = NotificationCompat.Builder(applicationContext, EPISODE_CHANNEL_ID)
             .setSmallIcon(R.drawable.new_episode)
             .setContentTitle(applicationContext.getString(R.string.episode_notification_title))
-            .setContentText(applicationContext.getString(R.string.episode_notification_text))
+            .setContentText(applicationContext.getString(R.string.episode_notification_text,podcastInfo.newCount,podcastInfo.name))
             .setNumber(podcastInfo.newCount)
             .setAutoCancel(true)
             .setContentIntent(pendingContent)

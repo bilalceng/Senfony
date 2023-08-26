@@ -13,9 +13,33 @@ import com.bilalberek.senfony.utility.Utility
 import com.bilalberek.senfony.viewModel.PodcastViewModel
 import com.bilalberek.senfony.viewModel.SearchViewModel
 
-class EpisodeListAdapter(): RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>() {
 
-    inner class ViewHolder(binding: EpisodeItemBinding): RecyclerView.ViewHolder(binding.root){
+interface EpisodeListAdapterListener{
+    fun onSelectedEpisode(episodeViewData:PodcastViewModel.EpisodeViewData)
+}
+
+class EpisodeListAdapter(
+    private val episodeListAdapterListener: EpisodeListAdapterListener
+): RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>() {
+
+    var episodeView: PodcastViewModel.EpisodeViewData? = null
+
+    inner class ViewHolder(binding: EpisodeItemBinding,
+    episodeListAdapterListener: EpisodeListAdapterListener): RecyclerView.ViewHolder(binding.root){
+
+        init {
+
+
+            binding.root.setOnClickListener {
+
+                episodeView?.let {
+                    println(episodeView?.description)
+                    println("ViewHolder")
+                    println("ı am here")
+                    episodeListAdapterListener.onSelectedEpisode(it)
+                }
+            }
+        }
             val tittleTextView: TextView = binding.titleView
             val descTextView: TextView = binding.descView
             val durationTextView: TextView = binding.durationView
@@ -42,16 +66,20 @@ class EpisodeListAdapter(): RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>(
     val differ = AsyncListDiffer(this, differCallback)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(EpisodeItemBinding.inflate(LayoutInflater.from(parent.context),parent,false))
+        println("onCreateViewHolder")
+        return ViewHolder(EpisodeItemBinding.inflate(LayoutInflater.from(parent.context),parent,false),
+        episodeListAdapterListener!!)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-       val  episodeView = differ.currentList[position]
+        println("onBindViewHolder")
+        episodeView = differ.currentList[position]
+
         holder.apply {
-            tittleTextView.text = episodeView.title
-            descTextView.text = HtmlUtils.htmlToSpannable(episodeView.description ?: "")
-            durationTextView.text = episodeView.duration
-            releaseDateTextView.text = episodeView.releaseDate?.let { date ->
+            tittleTextView.text = episodeView?.title
+            descTextView.text = HtmlUtils.htmlToSpannable(episodeView?.description ?: "")
+            durationTextView.text = episodeView?.duration
+            releaseDateTextView.text = episodeView?.releaseDate?.let { date ->
                 DateUtil.dateToShortDate(date)
             }
         }
@@ -59,6 +87,7 @@ class EpisodeListAdapter(): RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>(
     }
 
     override fun getItemCount(): Int {
+        println("getItemCount")
         return differ.currentList.size
     }
 }

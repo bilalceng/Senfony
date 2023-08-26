@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 
 class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFragmentListener {
      val podcastViewModel by viewModels<PodcastViewModel>()
-    private lateinit var searchItem : MenuItem
+    private  var searchItem : MenuItem? = null
     private val searchViewModel by viewModels<SearchViewModel>()
     private lateinit var podcastListAdapter: PodcastListAdapter
     val TAG = javaClass.simpleName
@@ -53,7 +53,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         updateControls()
         setUpPodcastListView()
         handleIntent(intent)
-        showDetails(podcast = null)
+        showDetails()
         addBackStackListener()
         createSubscription()
         scheduleJobs()
@@ -127,10 +127,12 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
         val podcastFeedUrl =
             intent.getStringExtra(EpisodeUpdateWorker.EXTRA_FEED_URL)
+        supportFragmentManager.popBackStack()
+
         podcastFeedUrl?.let {
             podcastViewModel.viewModelScope.launch {
                 val podcastSummaryViewData  = podcastViewModel.setActivePodcast(podcastFeedUrl)
-              showDetails(podcastSummaryViewData)
+              showDetails()
             }
         }
     }
@@ -163,7 +165,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         })
 
 
-        val searchView = searchItem.actionView as SearchView
+        val searchView = searchItem?.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE)
                 as SearchManager
 
@@ -174,7 +176,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         }
 
         if (binding.podcastRecyclerView.visibility == View.INVISIBLE) {
-            searchItem.isVisible = false
+            searchItem?.isVisible = false
         }
 
 
@@ -217,7 +219,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
 
         binding.podcastRecyclerView.visibility = View.INVISIBLE
-        searchItem.isVisible = false
+        searchItem?.isVisible = false
     }
 
     private fun showError(message: String) {
@@ -232,15 +234,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun showDetails(podcast: SearchViewModel.PodcastSummaryViewData?){
-
-        if (podcast != null){
-            showProgressBar()
-            GlobalScope.launch {
-                podcastViewModel.getPodcast(podcast)
-            }
-        }
-
+    private fun showDetails(){
 
         podcastListAdapter.setOnItemClickListener { podcastSummaryViewData ->
             podcastSummaryViewData?.let{
@@ -271,7 +265,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         supportFragmentManager.addOnBackStackChangedListener {
             if(supportFragmentManager.backStackEntryCount == 0){
                 binding.podcastRecyclerView.visibility = View.VISIBLE
-                searchItem.isVisible = true
+                searchItem?.isVisible = true
             }
         }
     }
