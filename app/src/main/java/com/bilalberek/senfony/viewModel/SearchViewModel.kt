@@ -5,15 +5,12 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
-import android.os.Build.VERSION.SDK
-import android.os.Build.VERSION.SDK_INT
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import com.bilalberek.senfony.Repository.ItunesRepo
 import com.bilalberek.senfony.model.PodcastResponse
 import com.bilalberek.senfony.utility.DateUtil
-import java.io.IOException
 import java.net.UnknownHostException
 
 class SearchViewModel(application: Application) :
@@ -35,7 +32,7 @@ class SearchViewModel(application: Application) :
         return PodcastSummaryViewData(
             itunesPodcast.collectionCensoredName,
            DateUtil.complexDateToNormalDate(itunesPodcast.releaseDate ?: "-"),
-            itunesPodcast.artworkUrl30,
+            itunesPodcast.artworkUrl100,
             itunesPodcast.feedUrl
         )
     }

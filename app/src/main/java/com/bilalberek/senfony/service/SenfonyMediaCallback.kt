@@ -21,10 +21,18 @@ class SenfonyMediaCallback(val context: Context,
                            private val mediaSession: MediaSessionCompat,
                            var mediaPlayer: MediaPlayer? = null
 ):MediaSessionCompat.Callback() {
+    var listener: SenfonyMediaListener? = null
     private var focusRequest: AudioFocusRequest? = null
     private var mediaUri:Uri? = null
     private var newMedia:Boolean = false
     private var mediaExtras: Bundle? = null
+
+
+    interface SenfonyMediaListener {
+        fun onStateChanged()
+        fun onStopPlaying()
+        fun onPausePlaying()
+    }
 
     private fun setState(state: Int)
     {
@@ -42,6 +50,11 @@ class SenfonyMediaCallback(val context: Context,
             .build()
 
         mediaSession.setPlaybackState(playbackState)
+
+        if (state == PlaybackStateCompat.STATE_PAUSED ||
+            state == PlaybackStateCompat.STATE_PLAYING) {
+            listener?.onStateChanged()
+        }
     }
 
 
@@ -111,21 +124,41 @@ class SenfonyMediaCallback(val context: Context,
      }
  }
 
-    private fun prepareMedia(){
-        if (newMedia){
+    private fun prepareMedia() {
+        if (newMedia) {
             newMedia = false
-            mediaPlayer?.let {mediaPlayer ->
+            mediaPlayer?.let { mediaPlayer ->
                 mediaUri?.let { mediaUri ->
                     mediaPlayer.reset()
                     mediaPlayer.setDataSource(context, mediaUri)
                     mediaPlayer.prepare()
-                    mediaSession.setMetadata(MediaMetadataCompat.Builder()
-                        .putString(MediaMetadataCompat
-                            .METADATA_KEY_MEDIA_URI,mediaUri.toString())
-                        .build())
+                    mediaExtras?.let { mediaExtras ->
+                        mediaSession.setMetadata(
+                            MediaMetadataCompat.Builder()
+                                .putString(
+                                    MediaMetadataCompat.METADATA_KEY_TITLE,
+                                    mediaExtras.getString(
+                                        MediaMetadataCompat.METADATA_KEY_TITLE
+                                    )
+                                )
+                                .putString(
+                                    MediaMetadataCompat.METADATA_KEY_ARTIST,
+                                    mediaExtras.getString(
+                                        MediaMetadataCompat.METADATA_KEY_ARTIST
+                                    )
+                                )
+                                .putString(
+                                    MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI,
+                                    mediaExtras.getString(
+                                        MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI
+                                    )
+                                )
+                                .build()
+                        )
+
+                    }
 
                 }
-
             }
         }
     }
@@ -147,6 +180,7 @@ class SenfonyMediaCallback(val context: Context,
                 setState(PlaybackStateCompat.STATE_PAUSED)
             }
         }
+        listener?.onPausePlaying()
     }
 
     private fun stopPlaying(){
@@ -158,6 +192,8 @@ class SenfonyMediaCallback(val context: Context,
                 setState(PlaybackStateCompat.STATE_STOPPED)
             }
         }
+
+        listener?.onStopPlaying()
     }
 
     override fun onPlay() {
@@ -165,19 +201,22 @@ class SenfonyMediaCallback(val context: Context,
         if (ensureAudioFocus()){
             mediaSession.isActive = true
             println("onPlay called")
-            setState(PlaybackStateCompat.STATE_PLAYING)
+            initializeMediaPlayer()
+            prepareMedia()
+            startPlaying()
         }
 
     }
 
     override fun onStop() {
         super.onStop()
-        println("onStop called")
+       stopPlaying()
     }
 
     override fun onPause() {
         super.onPause()
         println("onPause called")
-        setState(PlaybackStateCompat.STATE_PAUSED)
+        pausePlaying()
+
     }
 }
