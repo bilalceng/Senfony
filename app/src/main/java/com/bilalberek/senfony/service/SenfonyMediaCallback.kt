@@ -57,7 +57,6 @@ class SenfonyMediaCallback(val context: Context,
         }
     }
 
-
     override fun onPlayFromUri(uri: Uri, extras: Bundle?) {
         super.onPlayFromUri(uri, extras)
         println("Playing ${uri.toString()}")
