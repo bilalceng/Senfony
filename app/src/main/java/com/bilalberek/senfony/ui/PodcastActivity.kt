@@ -25,6 +25,7 @@ import com.bilalberek.senfony.adapters.PodcastListAdapter
 import com.bilalberek.senfony.databinding.ActivityMainBinding
 import com.bilalberek.senfony.service.ItunesService
 import com.bilalberek.senfony.service.RssFeedService
+import com.bilalberek.senfony.ui.fragments.EpisodePlayerFragment
 import com.bilalberek.senfony.ui.fragments.PodcastDetailsFragment
 import com.bilalberek.senfony.viewModel.PodcastViewModel
 import com.bilalberek.senfony.viewModel.SearchViewModel
@@ -194,6 +195,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
     companion object{
         private const val TAG_EPİSODE_UPDATE_JOB = "com.bilalberek.senfony.ui"
         private const val TAG_DETAILS_FRAGMENT = "DetailsFragment"
+        private const val TAG_PLAYER_FRAGMENT = "PlayerFragment"
     }
 
 
@@ -280,6 +282,11 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         supportFragmentManager.popBackStack()
     }
 
+    override fun onShowEpisodePlayer(episodeViewData: PodcastViewModel.EpisodeViewData) {
+            podcastViewModel.activeEpisodeViewData = episodeViewData
+            showPlayerFragment()
+    }
+
 
     private fun showSubscribedPodcasts(){
         val podcasts = podcastViewModel.getPodcasts()?.value
@@ -310,6 +317,24 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
             .build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(TAG_EPİSODE_UPDATE_JOB,
         ExistingPeriodicWorkPolicy.REPLACE,request)
+    }
+
+
+    private fun createEpisodePlayerFragment(): EpisodePlayerFragment{
+        var episodePlayerFragment = supportFragmentManager.findFragmentByTag(TAG_PLAYER_FRAGMENT) as EpisodePlayerFragment?
+        if (episodePlayerFragment == null){
+            episodePlayerFragment = EpisodePlayerFragment.newInstance()
+        }
+        return episodePlayerFragment
+    }
+
+    private fun showPlayerFragment(){
+        val episodePlayerFragment = createEpisodePlayerFragment()
+
+        supportFragmentManager.beginTransaction().replace(R.id.podcastDetailsContainer,
+        episodePlayerFragment, TAG_PLAYER_FRAGMENT).addToBackStack("player fragment").commit()
+        binding.podcastRecyclerView.visibility = View.INVISIBLE
+        searchItem?.isVisible = false
     }
 
 

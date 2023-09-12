@@ -30,122 +30,15 @@ import com.bumptech.glide.Glide
 
 
 class PodcastDetailsFragment : Fragment(),EpisodeListAdapterListener {
-    private lateinit var mediaBrowser: MediaBrowserCompat
-    private var mediaControllerCallback: MediaControllerCallback? = null
     private lateinit var listener: OnDetailsFragmentListener
     private lateinit var episodeListAdapter: EpisodeListAdapter
     private val podcastViewModel: PodcastViewModel by activityViewModels()
     private lateinit var binding: FragmentPodcastDetailsBinding
 //media staff--------
 
-    inner class MediaControllerCallback:MediaControllerCompat.Callback(){
-        override fun onMetadataChanged(metadata: MediaMetadataCompat?) {
-
-            super.onMetadataChanged(metadata)
-            println("metaData changed to ${metadata?.getString(MediaMetadataCompat.METADATA_KEY_MEDIA_URI)}")
-        }
-
-        override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
-            super.onPlaybackStateChanged(state)
-            println("state changed to $state")
-        }
-    }
-
-    private fun initMediaBrowser(){
-        println("PodcastDetailFragment initMediaBrowserCalled")
-        val fragmentActivity = activity as FragmentActivity
-        mediaBrowser = MediaBrowserCompat(fragmentActivity, ComponentName(fragmentActivity,SenfonyMediaService::class.java),
-        MediaBrowserCallBacks(),null)
-    }
-
-    inner class MediaBrowserCallBacks: MediaBrowserCompat.ConnectionCallback(){
-        override fun onConnected() {
-            super.onConnected()
-            registerMediaController(mediaBrowser.sessionToken)
-            println("onConnected")
-        }
-
-        override fun onConnectionSuspended() {
-            super.onConnectionSuspended()
-            println("onConnectionSuspended")
-        }
-
-        override fun onConnectionFailed() {
-            super.onConnectionFailed()
-            println("onConnectionFailed")
-        }
-    }
-
-
-    private fun registerMediaController(token: MediaSessionCompat.Token){
-        println("podcastDetailFragment registerMediaController called")
-        val fragmentActivity = activity as FragmentActivity
-        val mediaController = MediaControllerCompat(fragmentActivity,token)
-
-        MediaControllerCompat.setMediaController(fragmentActivity,mediaController)
-
-        mediaControllerCallback = MediaControllerCallback()
-        mediaController.registerCallback(mediaControllerCallback!!)
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        println("podcastDetailFragment onStart called")
-
-        if (mediaBrowser.isConnected){
-            val fragmentActivity = activity as FragmentActivity
-            if(MediaControllerCompat.getMediaController(fragmentActivity) == null){
-                registerMediaController(mediaBrowser.sessionToken)
-            }
-        }else{
-            mediaBrowser.connect()
-            println("PodcastDetailFragment initMediaBrowserCalled try to connect mediaBrowser")
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        val fragmentActivity = activity as FragmentActivity
-        if (MediaControllerCompat.getMediaController(fragmentActivity) != null) {
-            mediaControllerCallback?.let {
-                MediaControllerCompat.getMediaController(fragmentActivity).unregisterCallback(it)
-            }
-        }
-    }
-
-    private fun startPlaying(episodeViewData: PodcastViewModel.EpisodeViewData){
-        println("PodcastDetailFragment startPlaying called")
-        val fragmentActivity = activity as FragmentActivity
-        val controller = MediaControllerCompat.getMediaController(fragmentActivity)
-        val viewData = podcastViewModel.activePodcast ?: return
-        val bundle = Bundle()
-        bundle.putString(MediaMetadataCompat.METADATA_KEY_TITLE,
-            episodeViewData.title)
-        bundle.putString(MediaMetadataCompat.METADATA_KEY_ARTIST,
-            viewData.feedTitle)
-        bundle.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI,
-            viewData.imageUrl)
-        controller.transportControls.playFromUri(
-            Uri.parse(episodeViewData.mediaUrl), bundle)
-    }
-
-
     override fun onSelectedEpisode(episodeViewData: PodcastViewModel.EpisodeViewData) {
-        println("PodcastDetailFragment onSelectedEpisode called ")
-        val fragmentActivity = activity as FragmentActivity
-        var controller = MediaControllerCompat.getMediaController(fragmentActivity)
+        listener.onShowEpisodePlayer(episodeViewData)
 
-        if (controller.playbackState != null){
-            if(controller.playbackState.state == PlaybackStateCompat.STATE_PLAYING){
-                controller.transportControls.pause()
-
-            }else{
-                startPlaying(episodeViewData)
-            }
-        }else{
-            startPlaying(episodeViewData)
-        }
     }
 //media staff---------
 
@@ -155,7 +48,7 @@ class PodcastDetailsFragment : Fragment(),EpisodeListAdapterListener {
 
 
             setHasOptionsMenu(true)
-            initMediaBrowser()
+
         }
 
 
@@ -266,6 +159,7 @@ class PodcastDetailsFragment : Fragment(),EpisodeListAdapterListener {
         interface OnDetailsFragmentListener {
             fun onSubscribe()
             fun onUnSubscribe()
+            fun onShowEpisodePlayer(episodeViewData: PodcastViewModel.EpisodeViewData)
         }
 
 }

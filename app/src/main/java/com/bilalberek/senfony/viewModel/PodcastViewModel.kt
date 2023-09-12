@@ -22,6 +22,7 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
     val podcastLiveData: LiveData<PodcastViewData?> =  _podcastLiveData
     //!!!!!!!!!!!'!
     var podcastRepo : PodcastRepo? = null
+    var activeEpisodeViewData: EpisodeViewData? = null
     val podcastDao: PodcastDao = PodPlayDatabase.getInstance(application,viewModelScope).podcastDao()
     var activePodcast: Podcast? = null
 
