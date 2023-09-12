@@ -66,7 +66,8 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
         mediaSession.setCallback(callback)
     }
 
-    private fun getPausePlayAction(): Pair<NotificationCompat.Action, NotificationCompat.Action> {
+    private fun getPausePlayAction(): Triple<NotificationCompat.Action, NotificationCompat.Action, NotificationCompat.Action> {
+        println("    private fun getPausePlayAction(): Triple<NotificationCompat.Action, NotificationCompat.Action, NotificationCompat.Action>")
         val pauseAction = NotificationCompat.Action(
             R.drawable.ic_baseline_pause_24, getString(R.string.pause_value),
             MediaButtonReceiver.buildMediaButtonPendingIntent(
@@ -80,7 +81,13 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
             MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY)
         )
 
-        return Pair(pauseAction, playAction)
+
+        val skipAction = NotificationCompat.Action(
+            R.drawable.ic_baseline_skip_next_24, getString(R.string.skip_value),
+            MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)
+        )
+
+        return Triple(pauseAction, playAction, skipAction)
 
     }
 
@@ -92,6 +99,7 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
 
     @SuppressLint("UnspecifiedImmutableFlag")
     private fun getNotificationIntent():PendingIntent{
+        println("private fun getNotificationIntent():PendingIntent")
         val openActivityIntent = Intent(this,PodcastActivity::class.java)
         openActivityIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         return PendingIntent.getActivity(this@SenfonyMediaService,0,openActivityIntent,PendingIntent.FLAG_CANCEL_CURRENT)
@@ -100,6 +108,7 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun createNotificationChannel(){
+        println("createNotificationChannel()")
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if(notificationManager.getNotificationChannel(PLAYER_CHANNEL_ID) == null){
             val channel = NotificationChannel(PLAYER_CHANNEL_ID,"player",NotificationManager.IMPORTANCE_LOW)
@@ -111,8 +120,10 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
 
     private fun createNotification(mediaDescription: MediaDescriptionCompat, bitmap: Bitmap?)
     : Notification{
+
+        println("private fun createNotification(mediaDescription: MediaDescriptionCompat, bitmap: Bitmap?)")
         val notificationIntent = getNotificationIntent()
-        val (pauseAction, playAction) = getPausePlayAction()
+        val (pauseAction, playAction, skipAction) = getPausePlayAction()
 
         val notification = NotificationCompat.Builder(
             this@SenfonyMediaService, PLAYER_CHANNEL_ID)
@@ -126,6 +137,7 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setSmallIcon(R.drawable.new_episode)
             .addAction(if (isPlaying()) pauseAction else playAction)
+            .addAction(skipAction)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setMediaSession(mediaSession.sessionToken)
                 .setShowActionsInCompactView(0)
@@ -137,7 +149,9 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
     }
 
     private fun displayNotification(){
+        println("private fun displayNotification()")
         if(mediaSession.controller.metadata == null){
+            println("private fun displayNotification()2")
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -170,20 +184,28 @@ class SenfonyMediaService: MediaBrowserServiceCompat(),SenfonyMediaCallback.Senf
     }
 
     override fun onStateChanged() {
+        println("override fun onStateChanged()")
         displayNotification()
 
     }
 
     override fun onStopPlaying() {
+        println("override fun onStopPlaying()")
         stopSelf()
         stopForeground(true)
     }
 
     override fun onPausePlaying() {
+        println("override fun onPausePlaying()")
         stopForeground(false)
     }
 
+    override fun skipToNext() {
+       stopForeground(false)
+    }
+
     override fun onTaskRemoved(rootIntent: Intent?) {
+        println("override fun onTaskRemoved(rootIntent: Intent?)")
         super.onTaskRemoved(rootIntent)
         mediaSession.controller.transportControls.stop()
     }

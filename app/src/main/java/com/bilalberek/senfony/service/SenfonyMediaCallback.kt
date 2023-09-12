@@ -32,6 +32,7 @@ class SenfonyMediaCallback(val context: Context,
         fun onStateChanged()
         fun onStopPlaying()
         fun onPausePlaying()
+        fun skipToNext()
     }
 
     private fun setState(state: Int)
@@ -40,6 +41,7 @@ class SenfonyMediaCallback(val context: Context,
 
         mediaPlayer?.let {
            position =  it.currentPosition.toLong()
+            println("current position: $position")
         }
         val playbackState = PlaybackStateCompat.Builder()
             .setActions(PlaybackStateCompat.ACTION_PLAY or
@@ -53,6 +55,8 @@ class SenfonyMediaCallback(val context: Context,
 
         if (state == PlaybackStateCompat.STATE_PAUSED ||
             state == PlaybackStateCompat.STATE_PLAYING) {
+            println("setState  if (state == PlaybackStateCompat.STATE_PAUSED ||\n" +
+                    "            state == PlaybackStateCompat.STATE_PLAYING) ")
             listener?.onStateChanged()
         }
     }
@@ -64,6 +68,7 @@ class SenfonyMediaCallback(val context: Context,
             newMedia = false
             mediaExtras = null
         } else {
+            println("onPlayFromUri new Uri")
             mediaExtras = extras
             setNewMedia(uri)
         }
@@ -72,6 +77,7 @@ class SenfonyMediaCallback(val context: Context,
     }
 
     private fun setNewMedia(uri: Uri){
+        println("onPlayFromUri new Uri setNewUri")
         mediaUri = uri
         newMedia = true
     }
@@ -115,15 +121,18 @@ class SenfonyMediaCallback(val context: Context,
     }
 
  private fun initializeMediaPlayer(){
+     println("initializeMediaPlayer()")
      if (mediaPlayer == null){
             mediaPlayer = MediaPlayer()
             mediaPlayer?.setOnCompletionListener{
+                println("completed initializeMediaPlayer")
                 setState(PlaybackStateCompat.STATE_PAUSED)
             }
      }
  }
 
     private fun prepareMedia() {
+        println("private fun prepareMedia()")
         if (newMedia) {
             newMedia = false
             mediaPlayer?.let { mediaPlayer ->
@@ -163,6 +172,7 @@ class SenfonyMediaCallback(val context: Context,
     }
 
     private fun startPlaying(){
+        println("startPlaying()")
         mediaPlayer?.let { mediaPlayer ->
             if(!mediaPlayer.isPlaying){
                 mediaPlayer.start()
@@ -173,9 +183,11 @@ class SenfonyMediaCallback(val context: Context,
 
     private fun pausePlaying(){
         removeAudioFocus()
+        println("pausePlaying()")
         mediaPlayer?.let { mediaPlayer ->
             if(mediaPlayer.isPlaying){
                 mediaPlayer.pause()
+
                 setState(PlaybackStateCompat.STATE_PAUSED)
             }
         }
@@ -184,6 +196,7 @@ class SenfonyMediaCallback(val context: Context,
 
     private fun stopPlaying(){
         removeAudioFocus()
+        println("stopPlaying()")
         mediaSession.isActive = false
         mediaPlayer?.let{ mediaPlayer ->
             if (mediaPlayer.isPlaying){
@@ -199,7 +212,7 @@ class SenfonyMediaCallback(val context: Context,
         super.onPlay()
         if (ensureAudioFocus()){
             mediaSession.isActive = true
-            println("onPlay called")
+            println("override fun onPlay()")
             initializeMediaPlayer()
             prepareMedia()
             startPlaying()
@@ -209,13 +222,27 @@ class SenfonyMediaCallback(val context: Context,
 
     override fun onStop() {
         super.onStop()
+        println("override fun onStop()")
        stopPlaying()
     }
 
     override fun onPause() {
         super.onPause()
-        println("onPause called")
+        println(" override fun onPause()")
         pausePlaying()
 
+    }
+
+    override fun onSkipToNext() {
+        super.onSkipToNext()
+        println("bilal")
+        if (ensureAudioFocus()){
+            mediaSession.isActive = true
+            println("override fun skipToNext()")
+            initializeMediaPlayer()
+            prepareMedia()
+            startPlaying()
+            listener?.skipToNext()
+        }
     }
 }

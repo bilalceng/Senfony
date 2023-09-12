@@ -111,8 +111,6 @@ class PodcastDetailsFragment : Fragment(),EpisodeListAdapterListener {
             mediaControllerCallback?.let {
                 MediaControllerCompat.getMediaController(fragmentActivity).unregisterCallback(it)
             }
-        } else {
-            mediaBrowser.connect()
         }
     }
 

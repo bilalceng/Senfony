@@ -22,28 +22,28 @@ class EpisodeListAdapter(
     private val episodeListAdapterListener: EpisodeListAdapterListener
 ): RecyclerView.Adapter<EpisodeListAdapter.ViewHolder>() {
 
-    var episodeView: PodcastViewModel.EpisodeViewData? = null
 
-    inner class ViewHolder(binding: EpisodeItemBinding,
-    episodeListAdapterListener: EpisodeListAdapterListener): RecyclerView.ViewHolder(binding.root){
 
-        init {
+    inner class ViewHolder( var binding: EpisodeItemBinding,
+                            episodeListAdapterListener: EpisodeListAdapterListener): RecyclerView.ViewHolder(binding.root) {
 
+
+
+
+        fun bind(episodeView: PodcastViewModel.EpisodeViewData) {
+            binding.titleView.text = episodeView.title
+            binding.descView.text = HtmlUtils.htmlToSpannable(episodeView.description ?: "")
+            binding.durationView.text = episodeView.duration
+            binding.releaseDateView.text = episodeView.releaseDate?.let { date ->
+                DateUtil.dateToShortDate(date)
+            }
 
             binding.root.setOnClickListener {
-
-                episodeView?.let {
-                    println(episodeView?.description)
-                    println("ViewHolder")
-                    println("ı am here")
-                    episodeListAdapterListener.onSelectedEpisode(it)
-                }
+                episodeListAdapterListener.onSelectedEpisode(episodeView)
+                println("${episodeView.title}")
             }
+
         }
-            val tittleTextView: TextView = binding.titleView
-            val descTextView: TextView = binding.descView
-            val durationTextView: TextView = binding.durationView
-            val releaseDateTextView : TextView = binding.releaseDateView
     }
 
     private val differCallback = object :
@@ -66,28 +66,20 @@ class EpisodeListAdapter(
     val differ = AsyncListDiffer(this, differCallback)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        println("onCreateViewHolder")
+
         return ViewHolder(EpisodeItemBinding.inflate(LayoutInflater.from(parent.context),parent,false),
         episodeListAdapterListener!!)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        println("onBindViewHolder")
-        episodeView = differ.currentList[position]
 
-        holder.apply {
-            tittleTextView.text = episodeView?.title
-            descTextView.text = HtmlUtils.htmlToSpannable(episodeView?.description ?: "")
-            durationTextView.text = episodeView?.duration
-            releaseDateTextView.text = episodeView?.releaseDate?.let { date ->
-                DateUtil.dateToShortDate(date)
-            }
-        }
+       var  episodeView = differ.currentList[position]
+        holder.bind(episodeView)
 
     }
 
     override fun getItemCount(): Int {
-        println("getItemCount")
+
         return differ.currentList.size
     }
 }
