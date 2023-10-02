@@ -23,13 +23,14 @@ import com.bilalberek.senfony.Repository.ItunesRepo
 import com.bilalberek.senfony.Repository.PodcastRepo
 import com.bilalberek.senfony.adapters.PodcastListAdapter
 import com.bilalberek.senfony.databinding.ActivityMainBinding
+import com.bilalberek.senfony.service.EpisodePlayerFragment
 import com.bilalberek.senfony.service.ItunesService
 import com.bilalberek.senfony.service.RssFeedService
-import com.bilalberek.senfony.ui.fragments.EpisodePlayerFragment
 import com.bilalberek.senfony.ui.fragments.PodcastDetailsFragment
 import com.bilalberek.senfony.viewModel.PodcastViewModel
 import com.bilalberek.senfony.viewModel.SearchViewModel
 import com.bilalberek.senfony.worker.EpisodeUpdateWorker
+
 import kotlinx.coroutines.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -48,6 +49,10 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+
+
+
 
         setupToolbar()
         setupViewModels()
@@ -85,6 +90,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
         podcastListAdapter = PodcastListAdapter(this)
         binding.podcastRecyclerView.adapter = podcastListAdapter
     }
+
 
 
 
@@ -201,7 +207,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
     private fun createPodcastDetailFragment(): PodcastDetailsFragment{
         var podcastDetailFragment = supportFragmentManager.findFragmentByTag(TAG_DETAILS_FRAGMENT)
-                as PodcastDetailsFragment?
+                as? PodcastDetailsFragment
 
         if(podcastDetailFragment == null){
             podcastDetailFragment  = PodcastDetailsFragment.newInstance()
@@ -212,16 +218,20 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
 
     private fun showDetailsFragment(){
         val podcastDetailsFragment = createPodcastDetailFragment()
+        if(supportFragmentManager.backStackEntryCount == 0){
+            supportFragmentManager.beginTransaction().add(
+                R.id.podcastDetailsContainer,
+                podcastDetailsFragment,
+                TAG_DETAILS_FRAGMENT
+            ).addToBackStack("DetailsFragment").commit()
 
-        supportFragmentManager.beginTransaction().add(
-            R.id.podcastDetailsContainer,
-            podcastDetailsFragment,
-            TAG_DETAILS_FRAGMENT
-        ).addToBackStack("DetailsFragment").commit()
+            binding.podcastRecyclerView.visibility = View.INVISIBLE
+            searchItem?.isVisible = false
+        }
 
 
-        binding.podcastRecyclerView.visibility = View.INVISIBLE
-        searchItem?.isVisible = false
+
+
     }
 
     private fun showError(message: String) {
@@ -320,7 +330,7 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
     }
 
 
-    private fun createEpisodePlayerFragment(): EpisodePlayerFragment{
+    private fun createEpisodePlayerFragment(): EpisodePlayerFragment {
         var episodePlayerFragment = supportFragmentManager.findFragmentByTag(TAG_PLAYER_FRAGMENT) as EpisodePlayerFragment?
         if (episodePlayerFragment == null){
             episodePlayerFragment = EpisodePlayerFragment.newInstance()
@@ -331,10 +341,12 @@ class PodcastActivity : AppCompatActivity(),PodcastDetailsFragment.OnDetailsFrag
     private fun showPlayerFragment(){
         val episodePlayerFragment = createEpisodePlayerFragment()
 
-        supportFragmentManager.beginTransaction().replace(R.id.podcastDetailsContainer,
-        episodePlayerFragment, TAG_PLAYER_FRAGMENT).addToBackStack("player fragment").commit()
-        binding.podcastRecyclerView.visibility = View.INVISIBLE
-        searchItem?.isVisible = false
+            supportFragmentManager.beginTransaction().replace(R.id.podcastDetailsContainer,
+                episodePlayerFragment, TAG_PLAYER_FRAGMENT).addToBackStack("player fragment").commit()
+            binding.podcastRecyclerView.visibility = View.INVISIBLE
+            searchItem?.isVisible = false
+
+        println(" fragment number at ht ${supportFragmentManager.backStackEntryCount}")
     }
 
 

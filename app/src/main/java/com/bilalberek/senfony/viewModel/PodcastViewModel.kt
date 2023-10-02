@@ -16,6 +16,8 @@ import java.util.Date
 
 class PodcastViewModel(application: Application): AndroidViewModel(application) {
 
+
+
     var livePodcastSummaryViewData:LiveData<List<SearchViewModel.PodcastSummaryViewData>>?  = null
     //!!!!!!!!!!!!
     private val _podcastLiveData = MutableLiveData<PodcastViewData?>()
@@ -42,12 +44,14 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
         var description: String? = "",
         var mediaUrl: String = "",
         var releaseDate: Date? = null,
-        var duration : String? = ""
+        var duration : String? = "",
+        var isVideo: Boolean = false
     )
 
     private fun episodesToEpisodeView(episodes: List<Episode>): List<EpisodeViewData>{
 
         return episodes.map{
+            val isVideo = it.mimType.startsWith("video")
             EpisodeViewData(
                 it.guid,
                 it.title,
@@ -55,7 +59,7 @@ class PodcastViewModel(application: Application): AndroidViewModel(application) 
                 it.mediaUrl,
                 it.releaseDate,
                 it.duration,
-
+                isVideo
             )
         }
     }

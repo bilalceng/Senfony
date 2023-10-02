@@ -162,4 +162,9 @@ class PodcastDetailsFragment : Fragment(),EpisodeListAdapterListener {
             fun onShowEpisodePlayer(episodeViewData: PodcastViewModel.EpisodeViewData)
         }
 
+    override fun onStop() {
+        super.onStop()
+        println("PodcastDetailFragment  onStop called")
+    }
+
 }
